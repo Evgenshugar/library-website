@@ -1,301 +1,341 @@
-// Данные библиотеки (в реальном проекте будут храниться на сервере)
-let libraryData = {
-    books: [
-        {
-            id: 1,
-            title: "Властелин колец",
-            description: "Эпическая сага о путешествии Фродо Бэггинса",
-            cover: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwMDAyMCIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj48L3RleHQ+PC9zdmc+",
-            chapters: [
-                {
-                    id: 1,
-                    title: "Глава 1: Неожиданная вечеринка",
-                    content: "<p>Бильбо Бэггинс готовился к своему 111-му дню рождения...</p><img src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzk5OTkiLz48L3N2Zz4=' alt='Иллюстрация' style='width: 200px;'>"
-                }
-            ]
-        }
-    ]
-};
+let books = [];
+let currentBook = null;
+let currentChapter = null;
+const ADMIN_PASSWORD = 'PIRET';
 
-// Текущий режим (читатель/админ)
-let currentMode = 'reader';
-let currentBookId = null;
-let currentChapterId = null;
-
-// Инициализация при загрузке страницы
+// Загрузка данных при старте
 document.addEventListener('DOMContentLoaded', function() {
+    loadData();
     if (window.location.pathname.includes('admin.html')) {
-        setupAdminPage();
-    } else {
-        setupReaderPage();
+        document.getElementById('admin-login').style.display = 'block';
     }
 });
 
-// Настройка страницы для читателя
-function setupReaderPage() {
-    renderBookList();
-    
-    // Обработчики событий
-    document.getElementById('adminLogin').addEventListener('click', showAdminLogin);
-    document.getElementById('backToBooks').addEventListener('click', () => {
-        showSection('bookList');
-        currentBookId = null;
-    });
-    document.getElementById('backToChapters').addEventListener('click', () => {
-        showSection('chapterList');
-        currentChapterId = null;
-    });
-}
-
-// Отрисовка списка книг
-function renderBookList() {
-    const container = document.getElementById('booksContainer');
-    container.innerHTML = '';
-    
-    libraryData.books.forEach(book => {
-        const bookCard = document.createElement('div');
-        bookCard.className = 'book-card';
-        bookCard.innerHTML = `
-            <img src="${book.cover}" alt="${book.title}" class="book-cover">
-            <div class="book-info">
-                <h3 class="book-title">${book.title}</h3>
-                <p>${book.description}</p>
-            </div>
-        `;
-        bookCard.addEventListener('click', () => showChapters(book.id));
-        container.appendChild(bookCard);
-    });
-}
-
-// Показать главы книги
-function showChapters(bookId) {
-    currentBookId = bookId;
-    const book = libraryData.books.find(b => b.id === bookId);
-    
-    document.getElementById('currentBookTitle').textContent = book.title;
-    document.getElementById('chaptersContainer').innerHTML = '';
-    
-    book.chapters.forEach(chapter => {
-        const chapterItem = document.createElement('li');
-        chapterItem.className = 'chapter-item';
-        chapterItem.textContent = chapter.title;
-        chapterItem.addEventListener('click', () => showChapterContent(chapter.id));
-        document.getElementById('chaptersContainer').appendChild(chapterItem);
-    });
-    
-    showSection('chapterList');
-}
-
-function showChapterContent(chapterId) {
-    currentChapterId = chapterId;
-    const book = libraryData.books.find(b => b.id === currentBookId);
-    const chapter = book.chapters.find(c => c.id === chapterId);
-
-    document.getElementById('currentChapterTitle').textContent = chapter.title;
-    document.getElementById('contentDisplay').innerHTML = chapter.content;
-
-    showSection('chapterContent');
-}
-
-// Показать указанный раздел
-function showSection(sectionId) {
-    // Сначала скрыть все секции
-    document.querySelectorAll('.section').forEach(section => {
-        section.classList.add('hidden');
-    });
-    // Затем показать нужную
-    document.getElementById(sectionId).classList.remove('hidden');
-}
-
-// Показ модального окна для входа админа
-function showAdminLogin() {
-    const modal = document.createElement('div');
-    modal.id = 'loginModal';
-    modal.innerHTML = `
-        <div class="login-form">
-            <h3>Вход для администратора</h3>
-            <input type="password" id="adminPassword" class="login-input" placeholder="Введите пароль">
-            <div id="loginError" class="login-error">Неверный пароль!</div>
-            <button id="loginSubmit" class="btn">Войти</button>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    document.getElementById('loginModal').style.display = 'flex';
-
-    document.getElementById('loginSubmit').addEventListener('click', checkAdminPassword);
-    document.getElementById('adminPassword').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') checkAdminPassword();
-    });
-}
-
-// Проверка пароля админа
-function checkAdminPassword() {
-    const password = document.getElementById('adminPassword').value;
-    const errorElement = document.getElementById('loginError');
-
-    if (password === 'PIRET') {
-        // Успешный вход — перенаправление на админ-страницу
-        window.location.href = 'admin.html';
+// Загрузка данных из localStorage
+function loadData() {
+    const savedBooks = localStorage.getItem('libraryBooks');
+    if (savedBooks) {
+        books = JSON.parse(savedBooks);
     } else {
-        errorElement.style.display = 'block';
+        // Начальные данные
+        books = [
+            {
+                id: 1,
+                title: 'Война и мир',
+                description: 'Роман-эпопея Льва Толстого',
+                cover: 'https://via.placeholder.com/100',
+                chapters: [
+                    { id: 1, title: 'Глава 1', content: 'Содержание первой главы...' },
+                    { id: 2, title: 'Глава 2', content: 'Содержание второй главы...' }
+                ]
+            }
+        ];
+        saveData();
     }
 }
 
-// Настройка страницы для администратора
-function setupAdminPage() {
-    renderAdminBooks();
-
-    // Обработчики событий для админ-панели
-    document.getElementById('logout').addEventListener('click', () => {
-        window.location.href = 'index.html';
-    });
-
-    document.getElementById('addBookBtn').addEventListener('click', addBook);
-    document.getElementById('backToAdminBooks').addEventListener('click', () => {
-        showAdminSection('adminBooks');
-        currentBookId = null;
-    });
-    document.getElementById('addChapterBtn').addEventListener('click', addChapter);
+// Сохранение данных в localStorage
+function saveData() {
+    localStorage.setItem('libraryBooks', JSON.stringify(books));
 }
 
-// Отрисовка списка книг в админ-панели
-function renderAdminBooks() {
-    const container = document.getElementById('adminBooksContainer');
-    container.innerHTML = '';
+// Вход как читатель
+function loginAsReader() {
+    document.querySelector('.login-options').style.display = 'none';
+    document.getElementById('reader-view').style.display = 'block';
+    renderBooksList();
+}
 
-    libraryData.books.forEach(book => {
-        const bookItem = document.createElement('div');
-        bookItem.className = 'admin-book-item';
-        bookItem.innerHTML = `
-            <div>
-                <h3>${book.title}</h3>
-                <p>${book.description}</p>
-            </div>
-            <div class="book-actions">
-                <button class="btn btn-edit" onclick="editBook(${book.id})">Редактировать</button>
-                <button class="btn btn-delete" onclick="deleteBook(${book.id})">Удалить</button>
-                <button class="btn" onclick="showAdminChapters(${book.id})">Главы</button>
+// Запрос пароля для админа
+function promptAdminLogin() {
+    window.location.href = 'admin.html';
+}
+
+function checkAdminPassword() {
+    const password = document.getElementById('admin-password').value;
+    if (password === ADMIN_PASSWORD) {
+        document.getElementById('admin-login').style.display = 'none';
+        document.getElementById('admin-content').style.display = 'block';
+        renderBooksListAdmin();
+    } else {
+        alert('Неверный пароль!');
+    }
+}
+
+// Отображение списка книг в админ-панели
+function renderBooksListAdmin() {
+    const booksList = document.getElementById('books-list-admin');
+    booksList.innerHTML = '';
+    books.forEach(book => {
+        const bookElement = document.createElement('div');
+        bookElement.className = 'book-card';
+        bookElement.innerHTML = `
+            <img src="${book.cover}" alt="${book.title}" class="cover-img">
+            <h3>${book.title}</h3>
+            <p>${book.description}</p>
+            <div class="action-buttons">
+                <button onclick="editBook(${book.id})">Редактировать</button>
+                <button onclick="deleteBook(${book.id})">Удалить</button>
+                <button onclick="manageChapters(${book.id})">Главы</button>
             </div>
         `;
-        container.appendChild(bookItem);
+        booksList.appendChild(bookElement);
     });
 }
 
-// Показать главы книги в админ-панели
-function showAdminChapters(bookId) {
-    currentBookId = bookId;
-    const book = libraryData.books.find(b => b.id === bookId);
-
-    document.getElementById('adminCurrentBook').textContent = book.title;
-    renderAdminChapters();
-    showAdminSection('adminChapters');
+// Показать форму добавления книги
+function showAddBookForm() {
+    document.getElementById('add-book-form').style.display = 'block';
 }
 
-// Отрисовка списка глав в админ-панели
-function renderAdminChapters() {
-    const container = document.getElementById('adminChaptersContainer');
-    const book = libraryData.books.find(b => b.id === currentBookId);
-    container.innerHTML = '';
-
-    book.chapters.forEach(chapter => {
-        const chapterItem = document.createElement('li');
-        chapterItem.className = 'admin-chapter-item';
-        chapterItem.innerHTML = `
-            <div>
-                <strong>${chapter.title}</strong>
-            </div>
-            <div class="chapter-actions">
-                <button class="btn btn-edit" onclick="editChapter(${chapter.id})">Редактировать</button>
-                <button class="btn btn-delete" onclick="deleteChapter(${chapter.id})">Удалить</button>
-            </div>
-        `;
-        container.appendChild(chapterItem);
-    });
+// Скрыть форму добавления книги
+function hideAddBookForm() {
+    document.getElementById('add-book-form').style.display = 'none';
+    document.getElementById('new-book-title').value = '';
+    document.getElementById('new-book-description').value = '';
+    document.getElementById('new-book-cover').value = '';
 }
 
 // Добавление новой книги
 function addBook() {
-    const title = document.getElementById('newBookTitle').value;
-    const description = document.getElementById('newBookDescription').value;
-    const coverInput = document.getElementById('newBookCover');
+    const title = document.getElementById('new-book-title').value;
+    const description = document.getElementById('new-book-description').value;
+    const coverInput = document.getElementById('new-book-cover');
 
-    if (!title || !description || !coverInput.files.length) {
-        alert('Заполните все поля и выберите обложку!');
+    if (!title || !description) {
+        alert('Заполните все поля!');
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const newBook = {
-            id: Date.now(),
-            title: title,
-            description: description,
-            cover: e.target.result,
-            chapters: []
-        };
-        libraryData.books.push(newBook);
-        renderAdminBooks();
-        // Очистка формы
-        document.getElementById('newBookTitle').value = '';
-        document.getElementById('newBookDescription').value = '';
-        coverInput.value = '';
+    const newBook = {
+        id: Date.now(),
+        title: title,
+        description: description,
+        cover: coverInput.files.length > 0 ? URL.createObjectURL(coverInput.files[0]) : 'https://via.placeholder.com/100',
+        chapters: []
     };
-    reader.readAsDataURL(coverInput.files[0]);
+
+    books.push(newBook);
+    saveData();
+    hideAddBookForm();
+    renderBooksListAdmin();
+}
+
+// Удаление книги
+function deleteBook(bookId) {
+    if (confirm('Вы уверены, что хотите удалить эту книгу?')) {
+        books = books.filter(book => book.id !== bookId);
+        saveData();
+        renderBooksListAdmin();
+    }
+}
+
+// Редактирование книги
+function editBook(bookId) {
+    const book = books.find(b => b.id === bookId);
+    if (!book) return;
+
+    book.title = prompt('Введите новое название:', book.title) || book.title;
+    book.description = prompt('Введите новое описание:', book.description) || book.description;
+
+    // Для смены обложки можно добавить отдельный диалог
+    const changeCover = confirm('Хотите сменить обложку?');
+    if (changeCover) {
+        const coverInput = document.createElement('input');
+        coverInput.type = 'file';
+        coverInput.accept = 'image/*';
+        coverInput.onchange = function() {
+            if (this.files.length > 0) {
+                book.cover = URL.createObjectURL(this.files[0]);
+                saveData();
+                renderBooksListAdmin();
+            }
+        };
+        coverInput.click();
+    } else {
+        saveData();
+        renderBooksListAdmin();
+    }
+}
+
+// Управление главами книги
+function manageChapters(bookId) {
+    currentBook = books.find(b => b.id === bookId);
+    document.getElementById('books-management').style.display = 'none';
+    document.getElementById('chapters-management').style.display = 'block';
+    renderChaptersListAdmin();
+}
+
+// Отображение списка глав в админ-панели
+function renderChaptersListAdmin() {
+    const chaptersList = document.getElementById('chapters-list-admin');
+    chaptersList.innerHTML = '';
+
+    if (!currentBook || !currentBook.chapters) return;
+
+    currentBook.chapters.forEach(chapter => {
+        const chapterElement = document.createElement('div');
+        chapterElement.className = 'chapter-item';
+        chapterElement.innerHTML = `
+            <h4>${chapter.title}</h4>
+            <div>${chapter.content}</div>
+            <div class="action-buttons">
+                <button onclick="editChapter(${chapter.id})">Редактировать</button>
+                <button onclick="deleteChapter(${chapter.id})">Удалить</button>
+            </div>
+        `;
+        chaptersList.appendChild(chapterElement);
+    });
+}
+
+// Показать форму добавления главы
+function showAddChapterForm() {
+    document.getElementById('add-chapter-form').style.display = 'block';
+}
+
+// Скрыть форму добавления главы
+function hideAddChapterForm() {
+    document.getElementById('add-chapter-form').style.display = 'none';
+    document.getElementById('new-chapter-title').value = '';
+    document.getElementById('new-chapter-content').value = '';
 }
 
 // Добавление новой главы
 function addChapter() {
-    const title = document.getElementById('newChapterTitle').value;
-    const content = document.getElementById('newChapterContent').value;
+    const title = document.getElementById('new-chapter-title').value;
+    const content = document.getElementById('new-chapter-content').value;
 
     if (!title || !content) {
         alert('Заполните все поля!');
         return;
     }
 
-    const book = libraryData.books.find(b => b.id === currentBookId);
-    book.chapters.push({
+    const newChapter = {
         id: Date.now(),
         title: title,
         content: content
-    });
+    };
 
-    renderAdminChapters();
-    // Очистка формы
-    document.getElementById('newChapterTitle').value = '';
-    document.getElementById('newChapterContent').value = '';
-}
-
-// Удаление книги
-function deleteBook(bookId) {
-    if (confirm('Вы уверены, что хотите удалить эту книгу?')) {
-        libraryData.books = libraryData.books.filter(b => b.id !== bookId);
-        renderAdminBooks();
-    }
+    if (!currentBook.chapters) currentBook.chapters = [];
+    currentBook.chapters.push(newChapter);
+    saveData();
+    hideAddChapterForm();
+    renderChaptersListAdmin();
 }
 
 // Удаление главы
 function deleteChapter(chapterId) {
     if (confirm('Вы уверены, что хотите удалить эту главу?')) {
-        const book = libraryData.books.find(b => b.id === currentBookId);
-        book.chapters = book.chapters.filter(c => c.id !== chapterId);
-        renderAdminChapters();
+        currentBook.chapters = currentBook.chapters.filter(c => c.id !== chapterId);
+        saveData();
+        renderChaptersListAdmin();
     }
 }
 
-// Показать админ-секцию
-function showAdminSection(sectionId) {
-    document.querySelectorAll('.section').forEach(section => {
-        section.classList.add('hidden');
-    });
-    document.getElementById(sectionId).classList.remove('hidden');
-}
-
-// Заглушки для функций редактирования (можно доработать по необходимости)
-function editBook(bookId) {
-    alert('Функция редактирования книги будет реализована позже');
-}
-
+// Редактирование главы
 function editChapter(chapterId) {
-    alert('Функция редактирования главы будет реализована позже');
+    const chapter = currentBook.chapters.find(c => c.id === chapterId);
+    if (!chapter) return;
+
+    chapter.title = prompt('Введите новое название главы:', chapter.title) || chapter.title;
+    chapter.content = prompt('Введите новое содержимое главы:', chapter.content) || chapter.content;
+    saveData();
+    renderChaptersListAdmin();
+}
+
+// Возврат к списку книг из управления главами
+function backToBooksList() {
+    document.getElementById('chapters-management').style.display = 'none';
+    document.getElementById('books-management').style.display = 'block';
+    currentBook = null;
+}
+
+// Функции для читательского режима
+function renderBooksList() {
+    const booksList = document.getElementById('books-list');
+    booksList.innerHTML = '';
+    books.forEach(book => {
+        const bookElement = document.createElement('div');
+        bookElement.className = 'book-card';
+        bookElement.innerHTML = `
+            <img src="${book.cover}" alt="${book.title}" class="cover-img">
+            <h3>${book.title}</h3>
+            <p>${book.description}</p>
+        `;
+        bookElement.onclick = () => selectBook(book);
+        booksList.appendChild(bookElement);
+    });
+}
+
+function selectBook(book) {
+    currentBook = book;
+    document.getElementById('books-list').style.display = 'none';
+    document.getElementById('book-content').style.display = 'block';
+    renderChaptersList();
+}
+
+function renderChaptersList() {
+    const chaptersList = document.getElementById('chapters-list');
+    chaptersList.innerHTML = '<h2>Главы:</h2>';
+    currentBook.chapters.forEach(chapter => {
+        const chapterElement = document.createElement('div');
+        chapterElement.className = 'chapter-item';
+        chapterElement.textContent = chapter.title;
+        chapterElement.onclick = () => selectChapter(chapter);
+        chaptersList.appendChild(chapterElement);
+    });
+}
+
+// Выбор главы для отображения содержимого
+function selectChapter(chapter) {
+    currentChapter = chapter;
+    document.getElementById('chapter-content').innerHTML = `
+        <h2>${chapter.title}</h2>
+        <div>${chapter.content}</div>
+        <button onclick="backToChaptersList()">Назад к списку глав</button>
+    `;
+}
+
+// Возврат к списку глав из просмотра содержимого главы
+function backToChaptersList() {
+    document.getElementById('chapter-content').innerHTML = '';
+    document.getElementById('chapters-list').style.display = 'block';
+}
+
+// Возврат к списку книг из просмотра глав
+function backToBooksListReader() {
+    currentBook = null;
+    currentChapter = null;
+    document.getElementById('book-content').style.display = 'none';
+    document.getElementById('books-list').style.display = 'block';
+    renderBooksList();
+}
+
+// Кнопка «Назад к списку книг» в читательском режиме
+function addBackToBooksButton() {
+    const chapterContent = document.getElementById('chapter-content');
+    const backButton = document.createElement('button');
+    backButton.textContent = 'Назад к списку книг';
+    backButton.onclick = backToBooksListReader;
+    chapterContent.appendChild(backButton);
+}
+
+// Обработка навигации в читательском режиме — добавляем кнопку «Назад» после отображения главы
+function selectChapter(chapter) {
+    currentChapter = chapter;
+    const chapterContentDiv = document.getElementById('chapter-content');
+
+    chapterContentDiv.innerHTML = `
+        <h2>${chapter.title}</h2>
+        <div>${chapter.content}</div>
+    `;
+
+    // Добавляем кнопки навигации
+    const navigationButtons = document.createElement('div');
+    navigationButtons.className = 'action-buttons';
+    navigationButtons.innerHTML = `
+        <button onclick="backToChaptersList()">Назад к списку глав</button>
+        <button onclick="backToBooksListReader()">Назад к списку книг</button>
+    `;
+    chapterContentDiv.appendChild(navigationButtons);
 }

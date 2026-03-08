@@ -8,26 +8,18 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Электронная библиотека</h1>
-            <button id="adminLogin" class="btn">Вход для админа</button>
-        </header>
-
-        <div id="bookList" class="section">
+        <h1>Библиотека</h1>
+        <div class="login-options">
+            <button onclick="loginAsReader()">Войти как читатель</button>
+            <button onclick="promptAdminLogin()">Войти как админ</button>
+        </div>
+        <div id="reader-view" style="display: none;">
             <h2>Список книг</h2>
-            <div id="booksContainer"></div>
-        </div>
-
-        <div id="chapterList" class="section hidden">
-            <h2 id="currentBookTitle"></h2>
-            <button id="backToBooks" class="btn btn-secondary">Назад к книгам</button>
-            <ul id="chaptersContainer"></ul>
-        </div>
-
-        <div id="chapterContent" class="section hidden">
-            <h2 id="currentChapterTitle"></h2>
-            <button id="backToChapters" class="btn btn-secondary">Назад к главам</button>
-            <div id="contentDisplay"></div>
+            <div id="books-list"></div>
+            <div id="book-content">
+                <div id="chapters-list"></div>
+                <div id="chapter-content"></div>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
