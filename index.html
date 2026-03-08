@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Библиотека</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-screen" class="screen">
+        <h1>Добро пожаловать в библиотеку</h1>
+        <button onclick="loginAsReader()">Войти как читатель</button>
+        <button onclick="showAdminLogin()">Войти как администратор</button>
+    </div>
+
+    <div id="admin-login-screen" class="screen hidden">
+        <h2>Вход администратора</h2>
+        <input type="password" id="admin-password" placeholder="Введите пароль">
+        <button onclick="loginAsAdmin()">Войти</button>
+        <button onclick="goBackToLogin()">Назад</button>
+    </div>
+
+    <div id="books-screen" class="screen hidden">
+        <div class="header">
+            <h1>Список книг</h1>
+            <button id="add-book-btn" class="hidden" onclick="showAddBookForm()">Добавить книгу</button>
+            <button onclick="logout()">Выйти</button>
+        </div>
+        <div id="books-list" class="books-grid"></div>
+    </div>
+
+    <div id="chapters-screen" class="screen hidden">
+        <div class="header">
+            <h2 id="current-book-title"></h2>
+            <button onclick="backToBooks()">Назад к книгам</button>
+        </div>
+        <div id="chapters-list" class="chapters-grid"></div>
+    </div>
+
+    <div id="chapter-screen" class="screen hidden">
+        <div class="header">
+            <h2 id="chapter-title"></h2>
+            <button onclick="backToChapters()">Назад к главам</button>
+        </div>
+        <div id="chapter-content"></div>
+    </div>
+
+    <div id="add-book-form" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="hideAddBookForm()">&times;</span>
+            <h3>Добавить новую книгу</h3>
+            <input type="text" id="book-title" placeholder="Название книги" required>
+            <textarea id="book-description" placeholder="Описание (необязательно)"></textarea>
+            <input type="file" id="book-cover" accept="image/*">
+            <button onclick="addBook()">Добавить книгу</button>
+        </div>
+    </div>
+
+    <div id="add-chapter-form" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="hideAddChapterForm()">&times;</span>
+            <h3>Добавить главу</h3>
+            <input type="text" id="chapter-name" placeholder="Название главы" required>
+            <textarea id="chapter-content" placeholder="Текст главы" required></textarea>
+            <input type="file" id="chapter-image" accept="image/*" multiple>
+            <button onclick="addChapter()">Добавить главу</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
