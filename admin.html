@@ -7,39 +7,42 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container admin">
-        <h1>Админ-панель библиотеки</h1>
-        <div id="admin-login" class="login-form">
-            <h2>Вход для администратора</h2>
-            <input type="password" id="admin-password" placeholder="Введите пароль">
-            <button onclick="checkAdminPassword()">Войти</button>
-        </div>
-        <div id="admin-content" style="display: none;">
-            <div id="books-management">
+    <div class="container">
+        <header>
+            <h1>Админ-панель библиотеки</h1>
+            <button onclick="logout()" class="btn secondary-btn">Выйти</button>
+        </header>
+        
+        <div class="admin-content">
+            <div class="books-management">
                 <h2>Управление книгами</h2>
-                <button onclick="showAddBookForm()">Добавить книгу</button>
-                <div id="add-book-form" style="display: none;">
+                <div id="admin-books-container"></div>
+                
+                <div class="add-book-form">
+                    <h3>Добавить новую книгу</h3>
                     <input type="text" id="new-book-title" placeholder="Название книги">
                     <textarea id="new-book-description" placeholder="Описание книги"></textarea>
                     <input type="file" id="new-book-cover" accept="image/*">
-                    <button onclick="addBook()">Сохранить</button>
-                    <button onclick="hideAddBookForm()">Отмена</button>
+                    <button onclick="addBook()" class="btn">Добавить книгу</button>
                 </div>
-                <div id="books-list-admin"></div>
             </div>
-            <div id="chapters-management" style="display: none;">
-                <h2>Управление главами</h2>
-                <button onclick="showAddChapterForm()">Добавить главу</button>
-                <div id="add-chapter-form" style="display: none;">
+            
+            <div class="chapters-management hidden" id="chapters-management">
+                <button onclick="backToBooksAdmin()" class="btn back-btn">← Назад к книгам</button>
+                <h2 id="admin-current-book"></h2>
+                
+                <div id="admin-chapters-container"></div>
+                
+                <div class="add-chapter-form">
+                    <h3>Добавить новую главу</h3>
                     <input type="text" id="new-chapter-title" placeholder="Название главы">
-                    <textarea id="new-chapter-content" placeholder="Содержимое главы (можно добавлять HTML)"></textarea>
-                    <button onclick="addChapter()">Сохранить</button>
-                    <button onclick="hideAddChapterForm()">Отмена</button>
+                    <textarea id="new-chapter-content" placeholder="Содержимое главы (поддерживает HTML)"></textarea>
+                    <button onclick="addChapter()" class="btn">Добавить главу</button>
                 </div>
-                <div id="chapters-list-admin"></div>
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>

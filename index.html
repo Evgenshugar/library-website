@@ -8,20 +8,47 @@
 </head>
 <body>
     <div class="container">
-        <h1>Библиотека</h1>
-        <div class="login-options">
-            <button onclick="loginAsReader()">Войти как читатель</button>
-            <button onclick="promptAdminLogin()">Войти как админ</button>
+        <header>
+            <h1>Электронная библиотека</h1>
+        </header>
+        
+        <div id="login-screen" class="screen">
+            <div class="login-form">
+                <h2>Вход в библиотеку</h2>
+                <button onclick="loginAsReader()" class="btn">Войти как читатель</button>
+                <button onclick="showAdminLogin()" class="btn">Войти как администратор</button>
+            </div>
         </div>
-        <div id="reader-view" style="display: none;">
-            <h2>Список книг</h2>
-            <div id="books-list"></div>
-            <div id="book-content">
-                <div id="chapters-list"></div>
-                <div id="chapter-content"></div>
+
+        <div id="reader-screen" class="screen hidden">
+            <div class="books-list">
+                <h2>Список книг</h2>
+                <div id="books-container"></div>
+            </div>
+            
+            <div id="chapters-screen" class="hidden">
+                <button onclick="backToBooks()" class="btn back-btn">← Назад к книгам</button>
+                <h2 id="current-book-title"></h2>
+                <div id="chapters-container"></div>
+            </div>
+            
+            <div id="chapter-content" class="hidden">
+                <button onclick="backToChapters()" class="btn back-btn">← Назад к главам</button>
+                <h2 id="current-chapter-title"></h2>
+                <div id="content-display"></div>
+            </div>
+        </div>
+
+        <div id="admin-login-screen" class="screen hidden">
+            <div class="login-form">
+                <h2>Вход администратора</h2>
+                <input type="password" id="admin-password" placeholder="Введите пароль">
+                <button onclick="loginAsAdmin()" class="btn">Войти</button>
+                <button onclick="backToLogin()" class="btn secondary-btn">← Назад</button>
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
