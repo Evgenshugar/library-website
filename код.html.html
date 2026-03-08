@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Библиотека</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #bb86fc;
+            --danger-color: #cf6679;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .login-screen, .books-screen, .chapters-screen, .chapter-content-screen {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #a569e8;
+        }
+
+        .book-card, .chapter-card {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .book-card:hover, .chapter-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .book-cover {
+            width: 100px;
+            height: 150px;
+            object-fit: cover;
+            margin-right: 20px;
+            border-radius: 4px;
+        }
+
+        .book-info h3 {
+            margin-bottom: 10px;
+        }
+
+        .context-menu {
+            position: absolute;
+            background: var(--card-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+            z-index: 100;
+        }
+
+        .context-menu button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: none;
+            color: var(--text-color);
+        }
+
+        .context-menu button:hover {
+            background-color: rgba(187, 134, 252, 0.1);
+        }
+
+        .chapter-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: var(--card-color);
+            border: 1px solid #444;
+            color: var(--text-color);
+            border-radius: 5px;
+        }
+
+        textarea {
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Экран входа -->
+        <div id="loginScreen" class="login-screen active">
+            <h1>Добро пожаловать в библиотеку</h1>
+            <p>Выберите режим входа:</p>
+            <button onclick="showReaderLogin()">Читатель</button>
+            <button onclick="showAdminLogin()">Администратор</button>
+
+            <div id="readerLogin" style="display:none;">
+                <h2>Вход как читатель</h2>
+                <button onclick="loginAsReader()">Войти</button>
+            </div>
+
+            <div id="adminLogin" style="display:none;">
+                <h2>Вход как администратор</h2>
+                <input type="password" id="adminPassword" placeholder="Введите пароль">
+                <button onclick="loginAsAdmin()">Войти</button>
+            </div>
+        </div>
+
+        <!-- Экран выбора книг -->
+        <div id="booksScreen" class="books-screen">
+            <h1>Библиотека</h1>
+            <div id="booksList"></div>
+            <div id="addBookButton" style="display:none;">
+                <button onclick="showAddBookForm()">Добавить книгу</button>
+            </div>
+            <div id="addBookForm" style="display:none;">
+                <h2>Добавить новую книгу</h2>
+                <input type="text" id="newBookTitle" placeholder="Название книги">
+                <input type="text" id="newBookCover" placeholder="Ссылка на обложку">
+                <textarea id="newBookDescription" placeholder="Описание книги"></textarea>
+                <button onclick="addBook()">Добавить</button>
+                <button onclick="hideAddBookForm()">Отмена</button>
+            </div>
+        </div>
+
+        <!-- Экран выбора глав -->
+        <div id="chaptersScreen" class="chapters-screen">
+            <h1 id="currentBookTitle"></h1>
+            <div id="chaptersList"></div>
+            <div id="addChapterButton" style="display:none;">
+                <button onclick="showAddChapterForm()">Добавить главу</button>
+            </div>
+            <div id="addChapterForm" style="display:none;">
+                <h2>Добавить новую главу</h2>
+                <input type="text" id="newChapterTitle" placeholder="Название главы">
+                <textarea id="newChapterContent" placeholder="Текст главы (можно использовать HTML)"></textarea>
+                <button onclick="addChapter()">Добавить</button>
+                <button onclick="hideAddChapterForm()">Отмена</button>
+            </div>
+            <button onclick="backToBooks()">Назад к книгам</button>
+        </div>
+
+        <!-- Экран содержимого главы -->
+        <div id="chapterContentScreen" class="chapter-content-screen">
+            <h1 id="currentChapterTitle"></h1>
+            <div id="chapterContent" class="chapter-content"></div>
+            <button onclick="backToChapters()">Назад к главам</button>
+        </div>
+    </div>
+
+    <script>
+        let isAdmin = false;
+        let currentBookId = null;
+        let books = JSON.parse(localStorage.getItem('books')) || [
+            {
+                id: 1,
+                title: 'Пример книги 1',
+                cover: 'https://via.placeholder.com/100x150',
+                description: 'Описание первой книги',
+                chapters: [
+                    {
+                        id: 1,
+                        title: 'Глава 1',
+                        content: '<p>Это пример текста первой главы.</p><img src="https://via.placeholder.com/300" alt="Пример изображения">'
+                    }
+                ]
+            }
+        ];
+
+        // Инициализация
+        function init() {
+            renderBooks();
+        }
+
+        // Вход как читатель
+        function loginAsReader() {
+            isAdmin = false;
+            showBooksScreen();
+        }
+
+        // Вход как администратор
+        function loginAsAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === 'PIRET') {
+                isAdmin = true;
+                showBooksScreen();
+            } else {
+                alert('Неверный пароль!');
+            }
+        }
+
+        // Показать экран книг
+        function showBooksScreen() {
+    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('booksScreen').classList.add('active');
+
+    // Показать/скрыть кнопку добавления книги
+    document.getElementById('addBookButton').style.display = isAdmin ? 'block' : 'none';
+    renderBooks();
+}
+
+// Отобразить список книг
+function renderBooks() {
+    const booksList = document.getElementById('booksList');
+    booksList.innerHTML = '';
+
+    books.forEach(book => {
+        const bookCard = document.createElement('div');
+        bookCard.className = 'book-card';
+        bookCard.innerHTML = `
+            <img src="${book.cover || 'https://via.placeholder.com/100x150'}" alt="${book.title}" class="book-cover">
+            <div class="book-info">
+                <h3>${book.title}</h3>
+                <p>${book.description || 'Описание отсутствует'}</p>
+            </div>
+        `;
+
+        // Контекстное меню для админа
+        if (isAdmin) {
+            bookCard.oncontextmenu = (e) => {
+                e.preventDefault();
+                showBookContextMenu(e, book.id);
+            };
+        }
+
+        bookCard.onclick = () => showChaptersScreen(book.id);
+        booksList.appendChild(bookCard);
+    });
+}
+
+// Показать экран глав книги
+function showChaptersScreen(bookId) {
+    currentBookId = bookId;
+    const book = books.find(b => b.id === bookId);
+
+    document.getElementById('booksScreen').classList.remove('active');
+    document.getElementById('chaptersScreen').classList.add('active');
+
+    document.getElementById('currentBookTitle').textContent = book.title;
+    document.getElementById('addChapterButton').style.display = isAdmin ? 'block' : 'none';
+
+    renderChapters();
+}
+
+// Отобразить список глав
+function renderChapters() {
+    const chaptersList = document.getElementById('chaptersList');
+    chaptersList.innerHTML = '';
+    const book = books.find(b => b.id === currentBookId);
+
+    book.chapters.forEach(chapter => {
+        const chapterCard = document.createElement('div');
+        chapterCard.className = 'chapter-card';
+        chapterCard.textContent = chapter.title;
+
+        // Контекстное меню для админа
+        if (isAdmin) {
+            chapterCard.oncontextmenu = (e) => {
+                e.preventDefault();
+                showChapterContextMenu(e, chapter.id);
+            };
+        }
+
+        chapterCard.onclick = () => showChapterContent(chapter.id);
+        chaptersList.appendChild(chapterCard);
+    });
+}
+
+// Показать содержимое главы
+function showChapterContent(chapterId) {
+    const book = books.find(b => b.id === currentBookId);
+    const chapter = book.chapters.find(c => c.id === chapterId);
+
+    document.getElementById('chaptersScreen').classList.remove('active');
+    document.getElementById('chapterContentScreen').classList.add('active');
+
+    document.getElementById('currentChapterTitle').textContent = chapter.title;
+    document.getElementById('chapterContent').innerHTML = chapter.content;
+}
+
+// Показать форму добавления книги
+function showAddBookForm() {
+    document.getElementById('addBookForm').style.display = 'block';
+}
+
+// Скрыть форму добавления книги
+function hideAddBookForm() {
+    document.getElementById('addBookForm').style.display = 'none';
+    document.getElementById('newBookTitle').value = '';
+    document.getElementById('newBookCover').value = '';
+    document.getElementById('newBookDescription').value = '';
+}
+
+// Добавить новую книгу
+function addBook() {
+    const title = document.getElementById('newBookTitle').value;
+    const cover = document.getElementById('newBookCover').value;
+    const description = document.getElementById('newBookDescription').value;
+
+    if (!title) {
+        alert('Введите название книги!');
+        return;
+    }
+
+    const newBook = {
+        id: Date.now(),
+        title: title,
+        cover: cover,
+        description: description,
+        chapters: []
+    };
+
+    books.push(newBook);
+    saveBooks();
+    hideAddBookForm();
+    renderBooks();
+}
+
+// Показать форму добавления главы
+function showAddChapterForm() {
+    document.getElementById('addChapterForm').style.display = 'block';
+}
+
+// Скрыть форму добавления главы
+function hideAddChapterForm() {
+    document.getElementById('addChapterForm').style.display = 'none';
+    document.getElementById('newChapterTitle').value = '';
+    document.getElementById('newChapterContent').value = '';
+}
+
+// Добавить новую главу
+function addChapter() {
+    const title = document.getElementById('newChapterTitle').value;
+    const content = document.getElementById('newChapterContent').value;
+
+    if (!title || !content) {
+        alert('Заполните все поля!');
+        return;
+    }
+
+    const book = books.find(b => b.id === currentBookId);
+    const newChapter = {
+        id: Date.now(),
+        title: title,
+        content: content
+    };
+
+    book.chapters.push(newChapter);
+    saveBooks();
+    hideAddChapterForm();
+    renderChapters();
+}
+
+// Показать контекстное меню для книги
+function showBookContextMenu(event, bookId) {
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    menu.style.left = event.clientX + 'px';
+    menu.style.top = event.clientY + 'px';
+
+    menu.innerHTML = `
+        <button onclick="deleteBook(${bookId})">Удалить книгу</button>
+        <button onclick="hideContextMenu()">Отмена</button>
+    `;
+
+    document.body.appendChild(menu);
+}
+
+// Показать контекстное меню для главы
+function showChapterContextMenu(event, chapterId) {
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    menu.style.left = event.clientX + 'px';
+    menu.style.top = event.clientY + 'px';
+
+    menu.innerHTML = `
+        <button onclick="deleteChapter(${chapterId})">Удалить главу</button>
+        <button onclick="hideContextMenu()">Отмена</button>
+    `;
+
+    document.body.appendChild(menu);
+}
+
+// Скрыть контекстное меню
+function hideContextMenu() {
+    const menus = document.querySelectorAll('.context-menu');
+    menus.forEach(menu => menu.remove());
+}
+
+// Удалить книгу
+function deleteBook(bookId) {
+    books = books.filter(book => book.id !== bookId);
+    hideContextMenu();
+    saveBooks();
+    renderBooks();
+}
+
+// Удалить главу
+function deleteChapter(chapterId) {
+    const book = books.find(b => b.id === currentBookId);
+    book.chapters = book.chapters.filter(chapter => chapter.id !== chapterId);
+    hideContextMenu();
+    saveBooks();
+    renderChapters();
+}
+
+// Вернуться к списку книг
+function backToBooks() {
+    document.getElementById('chaptersScreen').classList.remove('active');
+    document.getElementById('booksScreen').classList.add('active');
+}
+
+// Вернуться к списку глав
+function backToChapters() {
+    document.getElementById('chapterContentScreen').classList.remove('active');
+    document.getElementById('chaptersScreen').classList.add('active');
+}
+
+// Сохранить книги в localStorage
+function saveBooks() {
+    localStorage.setItem('books', JSON.stringify(books));
+}
+
+// Показать экран входа для читателя
+function showReaderLogin() {
+    document.getElementById('readerLogin').style.display = 'block';
+    document.getElementById('adminLogin').style.display = 'none';
+}
+
+// Показать экран входа для администратора
+function showAdminLogin() {
+    document.getElementById('adminLogin').style.display = 'block';
+    document.getElementById('readerLogin').style.display = 'none';
+}
+
+// Инициализация приложения
+init();
+    </script>
+</body>
+</html>
