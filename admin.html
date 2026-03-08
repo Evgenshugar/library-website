@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель — Библиотека</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Админ панель библиотеки</h1>
+            <button id="logout" class="btn btn-danger">Выйти</button>
+        </header>
+
+        <div id="adminBooks" class="section">
+            <h2>Управление книгами</h2>
+            <div id="adminBooksContainer"></div>
+            <div class="add-book-form">
+                <h3>Добавить новую книгу</h3>
+                <input type="text" id="newBookTitle" placeholder="Название книги" required>
+                <textarea id="newBookDescription" placeholder="Описание книги" required></textarea>
+                <input type="file" id="newBookCover" accept="image/*" required>
+                <button id="addBookBtn" class="btn">Добавить книгу</button>
+            </div>
+        </div>
+
+        <div id="adminChapters" class="section hidden">
+            <h2>Главы книги: <span id="adminCurrentBook"></span></h2>
+            <button id="backToAdminBooks" class="btn btn-secondary">Назад к книгам</button>
+            <div id="adminChaptersContainer"></div>
+            <div class="add-chapter-form">
+                <h3>Добавить новую главу</h3>
+                <input type="text" id="newChapterTitle" placeholder="Название главы" required>
+                <textarea id="newChapterContent" placeholder="Содержимое главы (поддерживается HTML)" required></textarea>
+                <button id="addChapterBtn" class="btn">Добавить главу</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
