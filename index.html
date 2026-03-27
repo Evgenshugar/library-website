@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Электронная библиотека</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Электронная библиотека</h1>
+    </header>
+
+    <main id="app">
+        <!-- Главная страница — список книг -->
+        <div id="book-list" class="page">
+            <h2>Выберите книгу</h2>
+            <div class="books-grid" id="books-container"></div>
+        </div>
+
+        <!-- Страница глав книги -->
+        <div id="chapter-list" class="page hidden">
+            <button class="back-btn" onclick="showBookList()">← Назад к списку книг</button>
+            <h2 id="current-book-title"></h2>
+            <div id="chapters-container"></div>
+        </div>
+
+        <!-- Страница текста главы -->
+        <div id="text-page" class="page hidden">
+            <button class="back-btn" onclick="showChapterList()">← Назад к главам</button>
+            <h3 id="current-chapter-title"></h3>
+            <p id="text-content"></p>
+            <div class="pagination">
+                <button id="prev-page" onclick="prevPage()">← Предыдущая страница</button>
+                <span id="page-info">Страница 1</span>
+                <button id="next-page" onclick="nextPage()">Следующая страница →</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
