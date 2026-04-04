@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чтение главы - Библиотека GF</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #fff8e1;
+            color: #333;
+        }
+        .reader-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .chapter-content {
+            margin-bottom: 30px;
+            text-align: justify;
+        }
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .page-info {
+            text-align: center;
+            margin: 15px 0;
+            font-style: italic;
+            color: #666;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .nav-button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        .back-button {
+            padding: 10px 20px;
+            background-color: #607d8b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="goBack()">Назад к главам</button>
+    <div class="reader-container">
+        <h2 id="chapterTitle">Название главы</h2>
+        <div class="page-info" id="pageInfo">Страница 1 из N</div>
+        <div id="chapterContent" class="chapter-content"></div>
+        <div class="pagination">
+            <button id="prevPage" class="nav-button" onclick="prevPage()" disabled>Предыдущая</button>
+            <button id="nextPage" class="nav-button" onclick="nextPage()">Следующая</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadChapter);
+    </script>
+</body>
+</html>
